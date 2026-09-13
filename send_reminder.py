@@ -104,17 +104,21 @@ def reminder_12():
 
 
 if __name__ == "__main__":
-    # Memetakan argumen teks langsung ke fungsi masing-masing
+    # Memetakan kode teks argumen langsung ke fungsinya masing-masing
     functions_map = {
         "r1": reminder_1, "r2": reminder_2, "r3": reminder_3, "r4": reminder_4,
         "r5": reminder_5, "r6": reminder_6, "r7": reminder_7, "r8": reminder_8,
         "r9": reminder_9, "r10": reminder_10, "r11": reminder_11, "r12": reminder_12
     }
     
-    # Ambil input r1 - r12 dari terminal, jika kosong default ke r1
-    target = sys.argv[1] if len(sys.argv) > 1 else "r1"
+    # Default ke r1 jika tidak ada argumen masuk
+    msg_type = "r1"
     
-    if target in functions_map:
-        functions_map[target]()
+    if len(sys.argv) > 1:
+        # Mengambil argumen pertama, memecah jika ada spasi, dan mengubah jadi huruf kecil
+        msg_type = sys.argv[1].split()[0].lower()
+        
+    if msg_type in functions_map:
+        functions_map[msg_type]()
     else:
-        print(f"❌ Kode reminder '{target}' tidak ditemukan. Gunakan r1 sampai r12.")
+        print(f"❌ Kode reminder '{msg_type}' tidak ditemukan. Gunakan r1 sampai r12.")
