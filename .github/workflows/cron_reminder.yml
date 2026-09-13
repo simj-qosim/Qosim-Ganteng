@@ -2,30 +2,50 @@ name: Scheduled SeaTalk Reminder
 
 on:
   schedule:
-    # Trigger using UTC time configurations.
-    # Example: '0 2 * * 1-5' executes at 02:00 UTC (9:00 AM WIB) Monday through Friday
+    # Contoh schedule otomatis jika masih ingin dipakai (misal jam 02:00 UTC / 09:00 WIB)
     - cron: '0 2 * * 1-5'
   
-  # Allows you to manually trigger the workflow from the GitHub "Actions" tab for testing
+  # Aktifkan trigger manual dengan menu pilihan dropdown
   workflow_dispatch:
+    inputs:
+      reminder_choice:
+        description: 'Pilih jenis reminder yang ingin dikirim secara manual'
+        required: true
+        default: 'r1'
+        type: choice
+        options:
+          - 'r1 (Absen Pagi)'
+          - 'r2 (Report TL)'
+          - 'r3 (CBD Pagi)'
+          - 'r4 (Report Stop FU 1)'
+          - 'r5 (FU Call 1)'
+          - 'r6 (Absen S7 & S14)'
+          - 'r7 (Report TL 2)'
+          - 'r8 (CBD Sore)'
+          - 'r9 (FU Call 2)'
+          - 'r10 (Report Stop FU 2)'
+          - 'r11 (Script 8.8)'
+          - 'r12 (Absen Pulang)'
 
 jobs:
   trigger-bot:
     runs-on: ubuntu-latest
 
     steps:
-    # 1. Pull down the repository files to the runner environment
     - name: Checkout Code
       uses: actions/checkout@v4
 
-    # 2. Set up Python environment environment 
     - name: Setup Python
       uses: actions/setup-python@v5
       with:
         python-version: '3.11'
 
-    # 3. Securely inject the Webhook variable and execute script
     - name: Run Reminder Script
       env:
         SEATALK_WEBHOOK_URL: ${{ secrets.SEATALK_WEBHOOK_URL }}
-      run: python send_reminder.py
+        # Mengambil input pilihan jika manual, atau default ke 'r1' jika berjalan otomatis lewat cron schedule
+        SELECTED_REMINDER: ${{ github.event.inputs.reminder_choice || 'r1' }}
+      # Perintah memotong string pilihan (mengambil kode depannya saja seperti r1, r2, dll)
+      run: |
+        CODE=$(echo "${{ env.SELECTED_REMINDER }}" | awk '{print $1}')
+        python send_reminder.py $CODE
