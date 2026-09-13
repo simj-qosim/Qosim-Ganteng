@@ -1,31 +1,43 @@
 name: Scheduled SeaTalk Reminder
 
 on:
-  schedule:
-    # Contoh schedule otomatis jika masih ingin dipakai (misal jam 02:00 UTC / 09:00 WIB)
-    - cron: '0 2 * * 1-5'
-  
-  # Aktifkan trigger manual dengan menu pilihan dropdown
+  # Allows manual triggering directly from the GitHub Actions dashboard
   workflow_dispatch:
     inputs:
       reminder_choice:
-        description: 'Pilih jenis reminder yang ingin dikirim secara manual'
+        description: 'Choose manual reminder'
         required: true
         default: 'r1'
         type: choice
         options:
-          - 'r1 (Absen Pagi)'
-          - 'r2 (Report TL)'
-          - 'r3 (CBD Pagi)'
-          - 'r4 (Report Stop FU 1)'
-          - 'r5 (FU Call 1)'
-          - 'r6 (Absen S7 & S14)'
-          - 'r7 (Report TL 2)'
-          - 'r8 (CBD Sore)'
-          - 'r9 (FU Call 2)'
-          - 'r10 (Report Stop FU 2)'
-          - 'r11 (Script 8.8)'
-          - 'r12 (Absen Pulang)'
+          - 'r1'
+          - 'r2'
+          - 'r3'
+          - 'r4'
+          - 'r5'
+          - 'r6'
+          - 'r7'
+          - 'r8'
+          - 'r9'
+          - 'r10'
+          - 'r11'
+          - 'r12'
+
+  # Custom event triggers specifically designed for cron-job.org
+  repository_dispatch:
+    types:
+      - trigger_reminder1
+      - trigger_reminder2
+      - trigger_reminder3
+      - trigger_reminder4
+      - trigger_reminder5
+      - trigger_reminder6
+      - trigger_reminder7
+      - trigger_reminder8
+      - trigger_reminder9
+      - trigger_reminder10
+      - trigger_reminder11
+      - trigger_reminder12
 
 jobs:
   trigger-bot:
@@ -40,12 +52,34 @@ jobs:
       with:
         python-version: '3.11'
 
+    - name: Determine Reminder Code
+      id: get_code
+      run: |
+        # If triggered manually via GitHub Dashboard
+        if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+          echo "code=${{ github.event.inputs.reminder_choice }}" >> $GITHUB_OUTPUT
+        
+        # If triggered externally via cron-job.org webhook
+        elif [ "${{ github.event_name }}" = "repository_dispatch" ]; then
+          case "${{ github.event.action }}" in
+            trigger_reminder1)  echo "code=r1"  >> $GITHUB_OUTPUT ;;
+            trigger_reminder2)  echo "code=r2"  >> $GITHUB_OUTPUT ;;
+            trigger_reminder3)  echo "code=r3"  >> $GITHUB_OUTPUT ;;
+            trigger_reminder4)  echo "code=r4"  >> $GITHUB_OUTPUT ;;
+            trigger_reminder5)  echo "code=r5"  >> $GITHUB_OUTPUT ;;
+            trigger_reminder6)  echo "code=r6"  >> $GITHUB_OUTPUT ;;
+            trigger_reminder7)  echo "code=r7"  >> $GITHUB_OUTPUT ;;
+            trigger_reminder8)  echo "code=r8"  >> $GITHUB_OUTPUT ;;
+            trigger_reminder9)  echo "code=r9"  >> $GITHUB_OUTPUT ;;
+            trigger_reminder10) echo "code=r10" >> $GITHUB_OUTPUT ;;
+            trigger_reminder11) echo "code=r11" >> $GITHUB_OUTPUT ;;
+            trigger_reminder12) echo "code=r12" >> $GITHUB_OUTPUT ;;
+            *)                  echo "code=r1"  >> $GITHUB_OUTPUT ;;
+          esac
+        fi
+
     - name: Run Reminder Script
       env:
         SEATALK_WEBHOOK_URL: ${{ secrets.SEATALK_WEBHOOK_URL }}
-        # Mengambil input pilihan jika manual, atau default ke 'r1' jika berjalan otomatis lewat cron schedule
-        SELECTED_REMINDER: ${{ github.event.inputs.reminder_choice || 'r1' }}
-      # Perintah memotong string pilihan (mengambil kode depannya saja seperti r1, r2, dll)
       run: |
-        CODE=$(echo "${{ env.SELECTED_REMINDER }}" | awk '{print $1}')
-        python send_reminder.py $CODE
+        python send_reminder.py ${{ steps.get_code.outputs.code }}
