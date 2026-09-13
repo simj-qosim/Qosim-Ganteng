@@ -5,7 +5,7 @@ import urllib.request
 import urllib.error
 
 def send_to_seatalk(message, reminder_name):
-    """Fungsi utama untuk mengirim teks ke SeaTalk"""
+    """Fungsi utama untuk mengirim teks dan @All ke SeaTalk"""
     webhook_url = os.environ.get("SEATALK_WEBHOOK_URL")
 
     if not webhook_url:
@@ -14,10 +14,12 @@ def send_to_seatalk(message, reminder_name):
             "Pastikan sudah diset di environment variable."
         )
 
+    # Payload khusus SeaTalk untuk mengaktifkan fitur Mention All
     payload = {
         "tag": "text",
         "text": {
-            "content": message
+            "content": message,
+            "at_all": True  # <-- Fitur ini otomatis akan men-tag seluruh anggota grup
         }
     }
 
@@ -43,7 +45,7 @@ def send_to_seatalk(message, reminder_name):
             response_body = response.read().decode("utf-8", errors="replace")
             print(f"HTTP Status Code : {status}")
             if 200 <= status < 300:
-                print(f"✅ {reminder_name} berhasil dikirim.")
+                print(f"✅ {reminder_name} berhasil dikirim dengan mention @All.")
             else:
                 raise RuntimeError(f"Gagal. Status {status}: {response_body}")
     except Exception as error:
@@ -63,7 +65,7 @@ def reminder_2():
     send_to_seatalk(msg, "Reminder 2 (Report TL)")
 
 def reminder_3():
-    msg = "@All selamat pagi teman-teman sekedar mengingatkan untuk CBD nya semisal ketemu case hard complain,wpwn,suspect froud,dan ec do not itu diimput cbdnya h+4 23.59 untuk PTP H+3 teman-teman semangat.\njangan lupa di react ya"
+    msg = "Selamat pagi teman-teman sekedar mengingatkan untuk CBD nya semisal ketemu case hard complain,wpwn,suspect froud,dan ec do not itu diimput cbdnya h+4 23.59 untuk PTP H+3 teman-teman semangat.\njangan lupa di react ya"
     send_to_seatalk(msg, "Reminder 3 (CBD Pagi)")
 
 def reminder_4():
@@ -83,7 +85,7 @@ def reminder_7():
     send_to_seatalk(msg, "Reminder 7 (Report TL 2)")
 
 def reminder_8():
-    msg = "@All selamat sore teman-teman sekedar mengingatkan untuk CBD nya semisal ketemu case hard complain,wpwn,suspect froud,dan ec do not itu diimput cbdnya h+4 23.59 untuk PTP H+3 teman-teman semangat.\njangan lupa di react ya"
+    msg = "Selamat sore teman-teman sekedar mengingatkan untuk CBD nya semisal ketemu case hard complain,wpwn,suspect froud,dan ec do not itu diimput cbdnya h+4 23.59 untuk PTP H+3 teman-teman semangat.\njangan lupa di react ya"
     send_to_seatalk(msg, "Reminder 8 (CBD Sore)")
 
 def reminder_9():
@@ -114,9 +116,10 @@ if __name__ == "__main__":
     # Default ke r1 jika tidak ada argumen masuk
     msg_type = "r1"
     
+    # Mengamankan pembacaan input argument agar tidak error bertipe list
     if len(sys.argv) > 1:
-        # Mengambil argumen pertama, memecah jika ada spasi, dan mengubah jadi huruf kecil
-        msg_type = sys.argv[1].split()[0].lower()
+        raw_input = sys.argv[1]
+        msg_type = raw_input.strip().lower()
         
     if msg_type in functions_map:
         functions_map[msg_type]()
